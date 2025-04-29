@@ -171,7 +171,6 @@ tblib==1.7.0
 tenacity==8.2.3
 terminado==0.15.0
 textual==0.1.18
-thinc==8.3.2
 threadpoolctl==3.1.0
 tinycss2==1.1.1
 tokenizers==0.19.1
