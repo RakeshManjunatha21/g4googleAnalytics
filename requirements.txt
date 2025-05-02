@@ -185,3 +185,4 @@ XlsxWriter==3.0.3
 yarl==1.7.2
 zict==2.2.0
 zipp==3.8.0
+streamlit-chat
