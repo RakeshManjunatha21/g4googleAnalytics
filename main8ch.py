@@ -377,6 +377,12 @@ if prompt:
 
     Device performance: {dev.to_dict(orient='records')}
 
+    Sample Raw Dataset below:
+    Below is the list of datasets available for your query:
+    {data.keys()}
+    The datasets are as follows:
+    {data}
+
     The response should be in a short format and should be based on the data provided.
 
     """
