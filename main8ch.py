@@ -4,6 +4,7 @@ import glob
 import os
 import altair as alt
 import google.generativeai as genai
+import json
 
 # === Gemini LLM Setup ===
 os.environ["GOOGLE_API_KEY"] = "AIzaSyBIBr01u6_BNVfYk989DXkv3FKQA928Kq8"
@@ -61,7 +62,10 @@ for f in files:
     except Exception as e:
         pass
 
-
+# print(f"Loaded data keys: {list(data.keys())}")
+# print("-------------------")
+# print(f"Loaded data: {data}")
+# print("-------------------")
 
 # Tabs
 tabs = st.tabs([
@@ -346,6 +350,35 @@ with chat_container:
 
 # Chat input
 prompt = st.chat_input("Type your message here...")
+root_folder = "All Informations Aspire"
+
+# Store all extracted data
+all_data = {}
+
+# Function to read a file and return its content as a DataFrame
+def read_file(file_path):
+    if file_path.endswith('.csv'):
+        return pd.read_csv(file_path)
+    elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
+        return pd.read_excel(file_path)
+    return None
+
+# Traverse through all files in the folder and subfolders
+for root, dirs, files in os.walk(root_folder):
+    for file in files:
+        if file.endswith(('.csv', '.xlsx', '.xls')):
+            file_path = os.path.join(root, file)
+            try:
+                df = read_file(file_path)
+                if df is not None:
+                    # Use file name (without extension) as key
+                    file_key = os.path.relpath(file_path, root_folder)
+                    all_data[file_key] = df.to_dict(orient='records')
+            except Exception as e:
+                print(f"Error reading {file_path}: {e}")
+
+# Convert the entire dataset to JSON format
+output_json = json.dumps(all_data, indent=2)
 
 if prompt:
     # Append user message
@@ -356,34 +389,27 @@ if prompt:
     You are a senior marketing operations analyst with access to Google Ads and Google Analytics data.
 
     The user has already provided surface-level KPIs and executive summaries. 
-    Focus on strategy-impacting findings like stage mismatches, creative-geo gaps, funnel leaks, tagging issues, conversion delays, and underused high-performers. Base insights on detailed metrics (sessions, bounce, CTR, UTM, devices, campaigns, regions). Be sharp, specific, and action-oriented—avoid generic advice. Format as: Insight → Why it matters → What to do. based only on Provided data Google Ads and Google Analytics data.
+    Focus on strategy-impacting findings like stage mismatches, creative-geo gaps, funnel leaks, tagging issues, conversion delays, and underused high-performers. Base insights on detailed metrics. Be sharp, specific, and action-oriented—avoid generic advice. based only on Provided data Google Ads and Google Analytics data.
     in a very short answer, Your response is Strictly based on the below data for the user-query: {prompt}
+    while generating the response, please do not use any other data or information outside the provided data.
+    The data is in JSON format, and you can use it to extract insights and generate recommendations.
+    Strictly Don't include Which file the data is coming from, just use the data to answer the user query.
+    Strictly Don't include the terms in response like "Based on the provided data" or "According to the data" or "The provided data".
+
+    If User query is related to dates or last 30days, then you have to calculated the result and provide insights.
 
     Generate insights based on the user query using the following data:
 
-    Top 3 countries by sessions: {top_geo['country'].tolist()} with bounce rates {top_geo['bounceRate'].tolist()}
-
-    Session mediums distribution: {med.to_dict(orient='records')}
-
-    Landing pages with lowest conversion rates: {low_perf}
-
-    Top converting searches: {top_keywords}
-
-    Display ad auction metrics sample: {df_head.to_dict(orient='records')}
-
-    Channel performance: {src.to_dict(orient='records')}
-
-    Top regions: {geo.sort_values('sessions', ascending=False).head(3).to_dict(orient='records')}
-
-    Device performance: {dev.to_dict(orient='records')}
-
-    Sample Raw Dataset below:
-    Below is the list of datasets available for your query:
-    {data.keys()}
+    Raw Dataset below:
+    Use the below data to answer the user query.
+    The data is in JSON format, and you can use it to extract insights and generate recommendations.
     The datasets are as follows:
+    {output_json}
+    another dataset is as follows:
     {data}
 
     The response should be in a short format and should be based on the data provided.
+
 
     """
 
