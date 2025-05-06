@@ -357,11 +357,21 @@ all_data = {}
 
 # Function to read a file and return its content as a DataFrame
 def read_file(file_path):
-    if file_path.endswith('.csv'):
-        return pd.read_csv(file_path)
-    elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-        return pd.read_excel(file_path)
+    try:
+        if file_path.endswith('.csv'):
+            try:
+                return pd.read_csv(file_path, encoding='utf-8')
+            except UnicodeDecodeError:
+                try:
+                    return pd.read_csv(file_path, encoding='utf-16')
+                except UnicodeDecodeError:
+                    return pd.read_csv(file_path, encoding='ISO-8859-1')
+        elif file_path.endswith(('.xlsx', '.xls')):
+            return pd.read_excel(file_path)
+    except Exception as e:
+        print(f"❌ Error reading {file_path}: {e}")
     return None
+
 
 # Traverse through all files in the folder and subfolders
 for root, dirs, files in os.walk(root_folder):
