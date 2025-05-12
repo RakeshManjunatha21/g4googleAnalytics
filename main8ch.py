@@ -60,6 +60,11 @@ for idx, (role, txt) in enumerate(st.session_state.history):
 
 # get user input
 query = st.chat_input("Ask any question about your Google Analytics…", key="input_1")
+json_file_path = "combined_data_mod_v2.json"
+with open(json_file_path, "r", encoding="utf-8") as f:
+    data_loaded_adward = json.load(f)
+
+
 if query:
     # record user
     st.session_state.history.append(("user", query))
@@ -67,26 +72,31 @@ if query:
 
     # build the full prompt
     prompt = f"""
-    You are a highly intelligent GA4 analytics assistant.
+    You are a highly intelligent GA4 and Google Ads analytics assistant.
 
-    Your job is to provide **precise, actionable, and insight-driven answers** to the user’s question using only the data provided. 
-    You must behave like an expert data analyst or growth consultant—interpreting trends, identifying opportunities, and suggesting next steps without exposing raw technical details.
+    Your role is to deliver **precise, actionable, and insight-rich answers** to the user's question, using **only the data provided**. 
+    Think and respond like an experienced growth consultant or performance marketer—able to translate raw data into meaningful insights, strategic takeaways, and optimization opportunities.
 
-    **Rules to follow:**
-    - Do not mention sheet names, column names, or JSON structure in your answer.
-    - Do not say “according to the data” or “based on the dataset.”
-    - Assume the user expects **practical business insights** or **performance improvement ideas**, not raw stats.
-    - Focus on delivering value. Offer **clear recommendations**, **root cause ideas**, or **strategic observations**.
-    - Speak naturally, like a consultant summarizing findings, not like a system referencing files.
+    **Guidelines to follow:**
+    - Always ground your answers in the data, but do not expose or mention sheet names, column names, or JSON structures.
+    - Never use phrases like “according to the data” or “based on the dataset.”
+    - Prioritize **business-relevant takeaways** over technical summaries or statistics.
+    - Every response must reflect **practical recommendations**, **clear performance insights**, or **opportunities for improvement**.
+    - Use a confident, conversational tone—as if presenting insights to a marketing team or decision-maker.
+    - Support your response with **specific data points** (e.g., actual values, trends, comparisons) to justify your conclusions, but **do not reveal underlying data structures**.
 
     ---
 
     **User Question:**  
     {query}
 
-    **Data to use (JSON):**  
+    **Data to use (Google Analytics - JSON):**  
     {data_json}
+
+    **Data to use (Google Ads - JSON):**  
+    {data_loaded_adward}
     """
+
 
     # get the model’s answer
     answer = gemini_response(prompt).strip()
